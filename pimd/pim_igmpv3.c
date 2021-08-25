@@ -499,21 +499,6 @@ static void allow(struct igmp_sock *igmp, struct in_addr from,
 	struct igmp_group *group;
 	int i;
 
-	if (num_sources == 0) {
-		/*
-		  RFC 3376: 3.1. Socket-State
-		  If the requested filter mode is INCLUDE *and* the requested
-		  source list is empty, then the entry corresponding to the
-		  requested interface and multicast address is deleted if
-		  present. If no such entry is present, the request is ignored.
-		  So, deleting the group present.
-		*/
-		group = find_group_by_addr(igmp, group_addr);
-		if (group && (group->group_filtermode_isexcl == 0))
-			igmp_group_delete(group);
-		return;
-	}
-
 	/* non-existant group is created as INCLUDE {empty} */
 	group = igmp_add_group_by_addr(igmp, group_addr);
 	if (!group) {
@@ -545,13 +530,25 @@ static void allow(struct igmp_sock *igmp, struct in_addr from,
 
 	} /* scan received sources */
 
-	if ((num_sources == 0) && (group->group_filtermode_isexcl)
-	    && (listcount(group->group_source_list) == 1)) {
-		struct in_addr star = {.s_addr = INADDR_ANY};
+	if (num_sources == 0) {
+		if ((group->group_filtermode_isexcl)
+		    && (listcount(group->group_source_list) == 1)) {
+			struct in_addr star = {.s_addr = INADDR_ANY};
 
-		source = igmp_find_source_by_addr(group, star);
-		if (source)
-			igmp_source_reset_gmi(igmp, group, source);
+			source = igmp_find_source_by_addr(group, star);
+			if (source)
+				igmp_source_reset_gmi(igmp, group, source);
+		} else if (group->group_filtermode_isexcl == 0)
+			/*
+			   RFC 3376: 3.1. Socket-State
+			   If the requested filter mode is INCLUDE *and* the
+			   requested source list is empty, then the entry
+			   corresponding to the requested interface and
+			   multicast address is deleted if present. If no such
+			   entry is present, the request is ignored.
+			   So, deleting the group present.
+			   */
+			igmp_group_delete(group);
 	}
 }
 
