@@ -72,6 +72,8 @@ extern int ospf_area_range_substitute_set(struct ospf *, struct in_addr,
 					  struct prefix_ipv4 *);
 extern int ospf_area_range_substitute_unset(struct ospf *, struct in_addr,
 					    struct prefix_ipv4 *);
+extern int ospf_area_range_cost_unset(struct ospf *, struct in_addr,
+				      struct prefix_ipv4 *);
 extern struct ospf_area_range *ospf_area_range_match_any(struct ospf *,
 							 struct prefix_ipv4 *);
 extern int ospf_area_range_active(struct ospf_area_range *);

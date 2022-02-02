@@ -196,8 +196,6 @@ int ospf_area_range_set(struct ospf *ospf, struct in_addr area_id,
 
 	range = ospf_area_range_lookup(area, p);
 	if (range != NULL) {
-		if (!CHECK_FLAG(advertise, OSPF_AREA_RANGE_ADVERTISE))
-			range->cost_config = OSPF_AREA_RANGE_COST_UNSPEC;
 		if ((CHECK_FLAG(range->flags, OSPF_AREA_RANGE_ADVERTISE)
 		     && !CHECK_FLAG(advertise, OSPF_AREA_RANGE_ADVERTISE))
 		    || (!CHECK_FLAG(range->flags, OSPF_AREA_RANGE_ADVERTISE)
@@ -213,7 +211,10 @@ int ospf_area_range_set(struct ospf *ospf, struct in_addr area_id,
 		SET_FLAG(range->flags, OSPF_AREA_RANGE_ADVERTISE);
 	else {
 		UNSET_FLAG(range->flags, OSPF_AREA_RANGE_ADVERTISE);
+		UNSET_FLAG(range->flags, OSPF_AREA_RANGE_SUBSTITUTE);
 		range->cost_config = OSPF_AREA_RANGE_COST_UNSPEC;
+		range->subst_addr.s_addr = INADDR_ANY;
+		range->subst_masklen = 0;
 	}
 
 	return 1;
@@ -287,6 +288,28 @@ int ospf_area_range_substitute_set(struct ospf *ospf, struct in_addr area_id,
 	SET_FLAG(range->flags, OSPF_AREA_RANGE_SUBSTITUTE);
 	range->subst_addr = s->prefix;
 	range->subst_masklen = s->prefixlen;
+
+	return 1;
+}
+
+int ospf_area_range_cost_unset(struct ospf *ospf, struct in_addr area_id,
+			       struct prefix_ipv4 *p)
+{
+	struct ospf_area *area;
+	struct ospf_area_range *range;
+
+	area = ospf_area_lookup_by_area_id(ospf, area_id);
+	if (area == NULL)
+		return 0;
+
+	range = ospf_area_range_lookup(area, p);
+	if (range == NULL)
+		return 0;
+
+	if (ospf_area_range_active(range))
+		ospf_schedule_abr_task(ospf);
+
+	range->cost_config = OSPF_AREA_RANGE_COST_UNSPEC;
 
 	return 1;
 }

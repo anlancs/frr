@@ -617,7 +617,7 @@ DEFUN (no_ospf_network_area,
 
 DEFUN (ospf_area_range,
        ospf_area_range_cmd,
-       "area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [advertise [cost (0-16777215)]]",
+       "area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [<advertise|not-advertise|{cost (0-16777215)|substitute A.B.C.D/M}>]",
        "OSPF area parameters\n"
        "OSPF area ID in IP address format\n"
        "OSPF area ID as a decimal value\n"
@@ -625,149 +625,90 @@ DEFUN (ospf_area_range,
        "Area range prefix\n"
        "Advertise this range (default)\n"
        "User specified metric for this range\n"
-       "Advertised metric for this range\n")
-{
-	VTY_DECLVAR_INSTANCE_CONTEXT(ospf, ospf);
-	int idx_ipv4_number = 1;
-	int idx_ipv4_prefixlen = 3;
-	int idx_cost = 6;
-	struct prefix_ipv4 p;
-	struct in_addr area_id;
-	int format;
-	uint32_t cost;
-
-	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
-	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
-
-	ospf_area_range_set(ospf, area_id, &p, OSPF_AREA_RANGE_ADVERTISE);
-	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
-				     format);
-	if (argc > 5) {
-		cost = strtoul(argv[idx_cost]->arg, NULL, 10);
-		ospf_area_range_cost_set(ospf, area_id, &p, cost);
-	}
-
-	return CMD_SUCCESS;
-}
-
-DEFUN (ospf_area_range_cost,
-       ospf_area_range_cost_cmd,
-       "area <A.B.C.D|(0-4294967295)> range A.B.C.D/M cost (0-16777215)",
-       "OSPF area parameters\n"
-       "OSPF area ID in IP address format\n"
-       "OSPF area ID as a decimal value\n"
-       "Summarize routes matching address/mask (border routers only)\n"
-       "Area range prefix\n"
-       "User specified metric for this range\n"
-       "Advertised metric for this range\n")
-{
-	VTY_DECLVAR_INSTANCE_CONTEXT(ospf, ospf);
-	int idx_ipv4_number = 1;
-	int idx_ipv4_prefixlen = 3;
-	int idx_cost = 5;
-	struct prefix_ipv4 p;
-	struct in_addr area_id;
-	int format;
-	uint32_t cost;
-
-	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
-	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
-
-	ospf_area_range_set(ospf, area_id, &p, OSPF_AREA_RANGE_ADVERTISE);
-	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
-				     format);
-
-	cost = strtoul(argv[idx_cost]->arg, NULL, 10);
-	ospf_area_range_cost_set(ospf, area_id, &p, cost);
-
-	return CMD_SUCCESS;
-}
-
-DEFUN (ospf_area_range_not_advertise,
-       ospf_area_range_not_advertise_cmd,
-       "area <A.B.C.D|(0-4294967295)> range A.B.C.D/M not-advertise",
-       "OSPF area parameters\n"
-       "OSPF area ID in IP address format\n"
-       "OSPF area ID as a decimal value\n"
-       "Summarize routes matching address/mask (border routers only)\n"
-       "Area range prefix\n"
-       "DoNotAdvertise this range\n")
-{
-	VTY_DECLVAR_INSTANCE_CONTEXT(ospf, ospf);
-	int idx_ipv4_number = 1;
-	int idx_ipv4_prefixlen = 3;
-	struct prefix_ipv4 p;
-	struct in_addr area_id;
-	int format;
-
-	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
-	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
-
-	ospf_area_range_set(ospf, area_id, &p, 0);
-	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
-				     format);
-	ospf_area_range_substitute_unset(ospf, area_id, &p);
-
-	return CMD_SUCCESS;
-}
-
-DEFUN (no_ospf_area_range,
-       no_ospf_area_range_cmd,
-       "no area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [<cost (0-16777215)|advertise [cost (0-16777215)]|not-advertise>]",
-       NO_STR
-       "OSPF area parameters\n"
-       "OSPF area ID in IP address format\n"
-       "OSPF area ID as a decimal value\n"
-       "Summarize routes matching address/mask (border routers only)\n"
-       "Area range prefix\n"
-       "User specified metric for this range\n"
        "Advertised metric for this range\n"
-       "Advertise this range (default)\n"
-       "User specified metric for this range\n"
-       "Advertised metric for this range\n"
-       "DoNotAdvertise this range\n")
-{
-	VTY_DECLVAR_INSTANCE_CONTEXT(ospf, ospf);
-	int idx_ipv4_number = 2;
-	int idx_ipv4_prefixlen = 4;
-	struct prefix_ipv4 p;
-	struct in_addr area_id;
-	int format;
-
-	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
-	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
-
-	ospf_area_range_unset(ospf, area_id, &p);
-
-	return CMD_SUCCESS;
-}
-
-DEFUN (ospf_area_range_substitute,
-       ospf_area_range_substitute_cmd,
-       "area <A.B.C.D|(0-4294967295)> range A.B.C.D/M substitute A.B.C.D/M",
-       "OSPF area parameters\n"
-       "OSPF area ID in IP address format\n"
-       "OSPF area ID as a decimal value\n"
-       "Summarize routes matching address/mask (border routers only)\n"
-       "Area range prefix\n"
        "Announce area range as another prefix\n"
        "Network prefix to be announced instead of range\n")
 {
 	VTY_DECLVAR_INSTANCE_CONTEXT(ospf, ospf);
 	int idx_ipv4_number = 1;
 	int idx_ipv4_prefixlen = 3;
-	int idx_ipv4_prefixlen_2 = 5;
+	int idx_cost = 4;
+	int idx_ipv4_prefixlen2 = 4;
+	int idx_not_advertise = 4;
+	struct prefix_ipv4 p, s;
+	struct in_addr area_id;
+	int format;
+	uint32_t cost;
+
+	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
+	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
+
+	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
+				     format);
+	if (!strcmp(argv[idx_not_advertise]->arg, "not-advertise")) {
+		ospf_area_range_set(ospf, area_id, &p, 0);
+		return CMD_SUCCESS;
+	}
+
+	ospf_area_range_set(ospf, area_id, &p, OSPF_AREA_RANGE_ADVERTISE);
+
+	if (argc > 5) {
+		if (argv_find(argv, argc, "cost", &idx_cost)) {
+			cost = strtoul(argv[idx_cost + 1]->arg, NULL, 10);
+			ospf_area_range_cost_set(ospf, area_id, &p, cost);
+		}
+
+		if (argv_find(argv, argc, "substitute", &idx_ipv4_prefixlen2)) {
+			str2prefix_ipv4(argv[idx_ipv4_prefixlen2 + 1]->arg, &s);
+			ospf_area_range_substitute_set(ospf, area_id, &p, &s);
+		}
+	}
+
+	return CMD_SUCCESS;
+}
+
+DEFUN (no_ospf_area_range,
+       no_ospf_area_range_cmd,
+       "no area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [<advertise | [advertise] {cost [(0-16777215)]|substitute [A.B.C.D/M]}|not-advertise>]",
+       NO_STR
+       "OSPF area parameters\n"
+       "OSPF area ID in IP address format\n"
+       "OSPF area ID as a decimal value\n"
+       "Summarize routes matching address/mask (border routers only)\n"
+       "Area range prefix\n"
+       "Advertise this range (default)\n"
+       "Advertise this range (default)\n"
+       "User specified metric for this range\n"
+       "Advertised metric for this range\n"
+       "Announce area range as another prefix\n"
+       "Network prefix to be announced instead of range\n"
+       "DoNotAdvertise this range\n")
+{
+	VTY_DECLVAR_INSTANCE_CONTEXT(ospf, ospf);
+	int idx_ipv4_number = 2;
+	int idx_ipv4_prefixlen = 4;
+	int idx_ipv4_prefixlen2 = 4;
+	int idx_cost = 4;
 	struct prefix_ipv4 p, s;
 	struct in_addr area_id;
 	int format;
 
 	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
 	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
-	str2prefix_ipv4(argv[idx_ipv4_prefixlen_2]->arg, &s);
 
-	ospf_area_range_substitute_set(ospf, area_id, &p, &s);
-	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
-				     format);
+	if (argc < 6)
+		ospf_area_range_unset(ospf, area_id, &p);
+	else {
+		if (argv_find(argv, argc, "cost", &idx_cost)) {
+			ospf_area_range_cost_unset(ospf, area_id, &p);
+		}
+
+		if (argv_find(argv, argc, "substitute", &idx_ipv4_prefixlen2)) {
+			str2prefix_ipv4(argv[idx_ipv4_prefixlen2 + 1]->arg, &s);
+			ospf_area_range_substitute_unset(ospf, area_id, &p);
+		}
+
+	}
 
 	return CMD_SUCCESS;
 }
@@ -12789,11 +12730,7 @@ void ospf_vty_init(void)
 
 	/* "area range" commands.  */
 	install_element(OSPF_NODE, &ospf_area_range_cmd);
-	install_element(OSPF_NODE, &ospf_area_range_cost_cmd);
-	install_element(OSPF_NODE, &ospf_area_range_not_advertise_cmd);
 	install_element(OSPF_NODE, &no_ospf_area_range_cmd);
-	install_element(OSPF_NODE, &ospf_area_range_substitute_cmd);
-	install_element(OSPF_NODE, &no_ospf_area_range_substitute_cmd);
 
 	/* "area virtual-link" commands. */
 	install_element(OSPF_NODE, &ospf_area_vlink_cmd);
