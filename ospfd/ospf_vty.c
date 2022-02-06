@@ -624,6 +624,7 @@ DEFUN (ospf_area_range,
        "Summarize routes matching address/mask (border routers only)\n"
        "Area range prefix\n"
        "Advertise this range (default)\n"
+       "DoNotAdvertise this range\n"
        "User specified metric for this range\n"
        "Advertised metric for this range\n"
        "Announce area range as another prefix\n"
@@ -643,14 +644,14 @@ DEFUN (ospf_area_range,
 	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
 	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
 
-	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
-				     format);
 	if (!strcmp(argv[idx_not_advertise]->arg, "not-advertise")) {
 		ospf_area_range_set(ospf, area_id, &p, 0);
 		return CMD_SUCCESS;
 	}
 
 	ospf_area_range_set(ospf, area_id, &p, OSPF_AREA_RANGE_ADVERTISE);
+	ospf_area_display_format_set(ospf, ospf_area_get(ospf, area_id),
+				     format);
 
 	if (argc > 5) {
 		if (argv_find(argv, argc, "cost", &idx_cost)) {
@@ -669,14 +670,13 @@ DEFUN (ospf_area_range,
 
 DEFUN (no_ospf_area_range,
        no_ospf_area_range_cmd,
-       "no area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [<advertise | [advertise] {cost [(0-16777215)]|substitute [A.B.C.D/M]}|not-advertise>]",
+       "no area <A.B.C.D|(0-4294967295)> range A.B.C.D/M [<advertise|{cost [(0-16777215)]|substitute [A.B.C.D/M]}|not-advertise>]",
        NO_STR
        "OSPF area parameters\n"
        "OSPF area ID in IP address format\n"
        "OSPF area ID as a decimal value\n"
        "Summarize routes matching address/mask (border routers only)\n"
        "Area range prefix\n"
-       "Advertise this range (default)\n"
        "Advertise this range (default)\n"
        "User specified metric for this range\n"
        "Advertised metric for this range\n"
@@ -696,9 +696,9 @@ DEFUN (no_ospf_area_range,
 	VTY_GET_OSPF_AREA_ID(area_id, format, argv[idx_ipv4_number]->arg);
 	str2prefix_ipv4(argv[idx_ipv4_prefixlen]->arg, &p);
 
-	if (argc < 6)
+	if (argc < 6) {
 		ospf_area_range_unset(ospf, area_id, &p);
-	else {
+	} else {
 		if (argv_find(argv, argc, "cost", &idx_cost)) {
 			ospf_area_range_cost_unset(ospf, area_id, &p);
 		}
