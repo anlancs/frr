@@ -55,6 +55,19 @@ static int wheel_timer_thread_helper(struct thread *t)
 			       nextnode, data))
 		(*wheel->slot_run)(data);
 
+
+	/* update */
+	for (ALL_LIST_ELEMENTS(wheel->wheel_slot_skip_list, node, nextnode,
+			       data)) {
+
+		long long slot = (*wheel->slot_key)(data);
+		(*wheel->slot_run)(data);
+
+		listnode_delete(wheel->wheel_slot_skip_list, data);
+
+		listnode_add(wheel->wheel_slot_lists[slot % wheel->slots], data);
+	}
+
 	while (list_isempty(wheel->wheel_slot_lists[(curr_slot + slots_to_skip)
 						    % wheel->slots])
 	       && (curr_slot + slots_to_skip) % wheel->slots != curr_slot)
@@ -66,6 +79,37 @@ static int wheel_timer_thread_helper(struct thread *t)
 
 	return 0;
 }
+
+#if 0
+static int wheel_timer_update_helper(struct timer_wheel *wheel)
+{
+	unsigned long long curr_slot;
+	unsigned int slots_to_skip = 1;
+	unsigned int gap;
+
+	curr_slot = wheel->curr_slot;
+	while (list_isempty(wheel->wheel_slot_lists[(curr_slot + slots_to_skip)
+			    % wheel->slots])
+	       && (curr_slot + slots_to_skip) % wheel->slots != curr_slot)
+		slots_to_skip++;
+	if (slots_to_skip  >= wheel->slots_to_skip)
+		return 0;
+
+	THREAD_OFF(wheel->timer);
+	gap = wheel->slots_to_skip - slots_to_skip;
+
+	wheel->slots_to_skip = slots_to_skip;
+	thread_add_timer_msec(wheel->master, wheel_timer_thread, wheel,
+			      wheel->nexttime * slots_to_skip - gap,
+			      &wheel->timer);
+
+	if (debug_timer_wheel)
+		zlog_debug("%s: Forward %d, Wheel Slot: %lld(%lld) count: %d", __func__,
+			   gap, wheel->curr_slot, curr_slot,
+			   listcount(wheel->wheel_slot_lists[curr_slot]));
+	return 0;
+}
+#endif
 
 static int wheel_timer_thread(struct thread *t)
 {
@@ -147,8 +191,9 @@ int wheel_add_item(struct timer_wheel *wheel, void *item)
 	if (debug_timer_wheel)
 		zlog_debug("%s: Inserting %p: %lld %lld", __func__, item, slot,
 			   slot % wheel->slots);
-	listnode_add(wheel->wheel_slot_lists[slot % wheel->slots], item);
 
+	/* update */
+	listnode_add(wheel->wheel_slot_skip_list, item);
 	return 0;
 }
 
@@ -162,6 +207,7 @@ int wheel_remove_item(struct timer_wheel *wheel, void *item)
 		zlog_debug("%s: Removing %p: %lld %lld", __func__, item, slot,
 			   slot % wheel->slots);
 	listnode_delete(wheel->wheel_slot_lists[slot % wheel->slots], item);
-
+	/*update */
+	listnode_delete(wheel->wheel_slot_skip_list, item);
 	return 0;
 }

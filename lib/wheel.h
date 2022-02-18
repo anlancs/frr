@@ -34,6 +34,7 @@ struct timer_wheel {
 	unsigned int slots_to_skip;
 
 	struct list **wheel_slot_lists;
+	struct list *wheel_slot_skip_list;
 	struct thread *timer;
 	/*
 	 * Key to determine what slot the item belongs in
