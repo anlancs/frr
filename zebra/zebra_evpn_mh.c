@@ -2622,6 +2622,16 @@ static int zebra_evpn_es_type0_esi_update(struct zebra_if *zif, esi_t *esi)
 {
 	int rv;
 
+	/* Complete config of the ES-ID bootstraps the ES */
+	if (memcmp(esi, zero_esi, sizeof(*zero_esi))) {
+		/* clear old esi */
+		memset(&zif->es_info.esi, 0, sizeof(zif->es_info.esi));
+		/* if in ES is attached to zif delete it */
+		if (old_es)
+			zebra_evpn_local_es_del(&old_es);
+		return 0;
+	}
+
 	rv = zebra_evpn_local_es_update(zif, esi);
 
 	/* clear the old es_lid, es_sysmac - type-0 is being set so old
