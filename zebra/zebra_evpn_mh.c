@@ -1049,7 +1049,10 @@ void zebra_evpn_if_init(struct zebra_if *zif)
 	/* if an es_id and sysmac are already present against the interface
 	 * activate it
 	 */
-	zebra_evpn_local_es_update(zif, &zif->es_info.esi);
+
+	if (memcmp(&zif->es_info.esi, zero_esi, sizeof(*zero_esi))) {
+		zebra_evpn_local_es_update(zif, &zif->es_info.esi);
+	}
 }
 
 /* handle deletion of an access port by removing it from all associated
@@ -1765,9 +1768,6 @@ struct zebra_evpn_es *zebra_evpn_es_find(const esi_t *esi)
 static struct zebra_evpn_es *zebra_evpn_es_new(const esi_t *esi)
 {
 	struct zebra_evpn_es *es;
-
-	if (!memcmp(esi, zero_esi, sizeof(esi_t)))
-		return NULL;
 
 	es = XCALLOC(MTYPE_ZES, sizeof(struct zebra_evpn_es));
 
@@ -2621,6 +2621,7 @@ static int zebra_evpn_es_lid_update(struct zebra_if *zif, uint32_t lid)
 static int zebra_evpn_es_type0_esi_update(struct zebra_if *zif, esi_t *esi)
 {
 	int rv;
+	struct zebra_evpn_es *old_es = zif->es_info.es;
 
 	/* Complete config of the ES-ID bootstraps the ES */
 	if (memcmp(esi, zero_esi, sizeof(*zero_esi))) {
