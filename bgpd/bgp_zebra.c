@@ -1272,7 +1272,7 @@ void bgp_zebra_announce(struct bgp_dest *dest, const struct prefix *p,
 	bool nh_updated = false;
 	bool do_wt_ecmp;
 	uint64_t cum_bw = 0;
-	uint32_t nhg_id = 0;
+	uint32_t nhg_id;
 	bool is_add;
 
 	/* Don't try to install if we're not connected to Zebra or Zebra doesn't
