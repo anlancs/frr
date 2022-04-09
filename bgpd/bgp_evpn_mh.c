@@ -2886,7 +2886,7 @@ static void bgp_evpn_l3nhg_zebra_add_v4_or_v6(struct bgp_evpn_es_vrf *es_vrf,
 
 static bool bgp_evpn_l3nhg_zebra_ok(struct bgp_evpn_es_vrf *es_vrf)
 {
-	if (!bgp_mh_info->host_routes_use_l3nhg && !bgp_mh_info->install_l3nhg)
+	if (!bgp_mh_info->host_routes_use_l3nhg)
 		return false;
 
 	/* Check socket. */
@@ -3874,7 +3874,7 @@ int bgp_evpn_remote_es_evi_del(struct bgp *bgp, struct bgpevpn *vpn,
 				   esi_to_str(&p->prefix.ead_addr.esi, buf,
 					      sizeof(buf)),
 				   vpn->vni,
-    			   &p->prefix.ead_addr.ip.ipaddr_v4);
+				   &p->prefix.ead_addr.ip.ipaddr_v4);
 		return 0;
 	}
 	es_evi = bgp_evpn_es_evi_find(es, vpn);
@@ -4966,7 +4966,6 @@ void bgp_evpn_mh_init(void)
 	/* config knobs - XXX add cli to control it */
 	bgp_mh_info->ead_evi_adv_for_down_links = true;
 	bgp_mh_info->consistency_checking = true;
-	bgp_mh_info->install_l3nhg = false;
 	bgp_mh_info->host_routes_use_l3nhg = BGP_EVPN_MH_USE_ES_L3NHG_DEF;
 	bgp_mh_info->suppress_l3_ecomm_on_inactive_es = true;
 	bgp_mh_info->bgp_evpn_nh_setup = true;
