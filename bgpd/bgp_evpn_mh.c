@@ -352,7 +352,7 @@ static void bgp_evpn_es_route_del_all(struct bgp *bgp, struct bgp_evpn_es *es)
  */
 int bgp_evpn_mh_route_update(struct bgp *bgp, struct bgp_evpn_es *es,
 			     struct bgpevpn *vpn, afi_t afi, safi_t safi,
-			     struct bgp_dest *dest, struct attr *attr, int add,
+			     struct bgp_dest *dest, struct attr *attr,
 			     struct bgp_path_info **ri, int *route_changed)
 {
 	struct bgp_path_info *tmp_pi = NULL;
@@ -390,9 +390,6 @@ int bgp_evpn_mh_route_update(struct bgp *bgp, struct bgp_evpn_es *es,
 			&es->originator_ip);
 		return -1;
 	}
-
-	if (!local_pi && !add)
-		return 0;
 
 	/* create or update the entry */
 	if (!local_pi) {
@@ -655,7 +652,7 @@ static int bgp_evpn_type4_route_update(struct bgp *bgp,
 	dest = bgp_node_get(es->route_table, (struct prefix *)p);
 
 	/* Create or update route entry. */
-	ret = bgp_evpn_mh_route_update(bgp, es, NULL, afi, safi, dest, &attr, 1,
+	ret = bgp_evpn_mh_route_update(bgp, es, NULL, afi, safi, dest, &attr,
 				       &pi, &route_changed);
 	if (ret != 0)
 		flog_err(
@@ -684,8 +681,7 @@ static int bgp_evpn_type4_route_update(struct bgp *bgp,
 		dest = bgp_global_evpn_node_get(bgp->rib[afi][safi], afi, safi,
 						p, &es->es_base_frag->prd);
 		bgp_evpn_mh_route_update(bgp, es, NULL, afi, safi, dest,
-					 attr_new, 1, &global_pi,
-					 &route_changed);
+					 attr_new, &global_pi, &route_changed);
 
 		/* Schedule for processing and unlock node. */
 		bgp_process(bgp, dest, afi, safi);
@@ -975,7 +971,7 @@ static int bgp_evpn_type1_route_update(struct bgp *bgp, struct bgp_evpn_es *es,
 
 		/* Create or update route entry. */
 		ret = bgp_evpn_mh_route_update(bgp, es, vpn, afi, safi, dest,
-					       &attr, 1, &pi, &route_changed);
+					       &attr, &pi, &route_changed);
 		if (ret != 0)
 			flog_err(
 				EC_BGP_ES_INVALID,
@@ -997,7 +993,7 @@ static int bgp_evpn_type1_route_update(struct bgp *bgp, struct bgp_evpn_es *es,
 
 		/* Create or update route entry. */
 		ret = bgp_evpn_mh_route_update(bgp, es, vpn, afi, safi, dest,
-					       &attr, 1, &pi, &route_changed);
+					       &attr, &pi, &route_changed);
 		if (ret != 0) {
 			flog_err(
 				EC_BGP_ES_INVALID,
@@ -1029,8 +1025,7 @@ static int bgp_evpn_type1_route_update(struct bgp *bgp, struct bgp_evpn_es *es,
 		dest = bgp_global_evpn_node_get(bgp->rib[afi][safi], afi, safi,
 						p, global_rd);
 		bgp_evpn_mh_route_update(bgp, es, vpn, afi, safi, dest,
-					 attr_new, 1, &global_pi,
-					 &route_changed);
+					 attr_new, &global_pi, &route_changed);
 
 		/* Schedule for processing and unlock node. */
 		bgp_process(bgp, dest, afi, safi);
