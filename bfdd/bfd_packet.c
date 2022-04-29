@@ -641,8 +641,8 @@ void bfd_recv_cb(struct thread *t)
 
 	/*
 	 * Multi hop: validate packet TTL.
-	 * Single hop: set local address that received the packet depending on
-	 * address-family
+	 * Single hop: set local address that received the packet
+	 * depending on address-family
 	 */
 	if (is_mhop) {
 		if (ttl < bfd->mh_ttl) {
@@ -650,16 +650,6 @@ void bfd_recv_cb(struct thread *t)
 				 "exceeded max hop count (expected %d, got %d)",
 				 bfd->mh_ttl, ttl);
 			return;
-		}
-	/* Check if key.local is all 0's (unassigned) */
-	} else if (memcmp(&bfd->key.local, &zero_addr,
-			  sizeof(bfd->key.local)) == 0) {
-		if (sd == bvrf->bg_shop) {
-			memcpy(&bfd->key.local, &local.sa_sin.sin_addr,
-			       sizeof(local.sa_sin.sin_addr));
-		} else if (sd == bvrf->bg_shop6) {
-			memcpy(&bfd->key.local, &local.sa_sin6.sin6_addr,
-			       sizeof(local.sa_sin6.sin6_addr));
 		}
 	}
 
