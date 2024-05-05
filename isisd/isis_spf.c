@@ -2355,8 +2355,10 @@ static void show_isis_topology_common(struct vty *vty, int levels,
 		fa = NULL;
 		if (flex_algo_id_valid(algo)) {
 			fa = flex_algo_lookup(area->flex_algos, algo);
-			if (!fa)
+			if (!fa) {
+				vty_out(vty, "\n");
 				continue;
+			}
 			fa_data = (struct isis_flex_algo_data *)fa->data;
 		} else
 			fa_data = NULL;
