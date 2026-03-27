@@ -116,10 +116,18 @@ def test_bgp_confed_ipv4_unicast():
     )
 
     tgen.gears["r2"].vtysh_cmd(
-        f"configure terminal\nrouter bgp\nno bgp confederation identifier\n"
+        """
+        configure terminal
+          router bgp
+            no bgp confederation identifier
+        """
     )
     tgen.gears["r2"].vtysh_cmd(
-        f"configure terminal\nrouter bgp\nbgp confederation identifier 300\n"
+        """
+        configure terminal
+          router bgp
+            bgp confederation identifier 300
+        """
     )
 
     for router in tgen.routers().values():
