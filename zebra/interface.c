@@ -184,6 +184,12 @@ static void if_down_nhg_dependents(const struct interface *ifp)
 
 	frr_each (nhg_connected_tree, &zif->nhg_dependents, rb_node_dep) {
 		frrtrace(2, frr_zebra, if_down_nhg_dependents, ifp, rb_node_dep->nhe);
+
+		/* Notify FPM of the deletion so it can clean up. */
+		if (CHECK_FLAG(rb_node_dep->nhe->flags, NEXTHOP_GROUP_INITIAL_DELAY_INSTALL) &&
+		    CHECK_FLAG(rb_node_dep->nhe->flags, NEXTHOP_GROUP_INSTALLED))
+			dplane_nexthop_delete(rb_node_dep->nhe);
+
 		zebra_nhg_check_valid(rb_node_dep->nhe);
 	}
 }
