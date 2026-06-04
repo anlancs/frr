@@ -4096,7 +4096,10 @@ void zebra_interface_nhg_reinstall(struct interface *ifp)
 					__func__, rb_node_dep->nhe, nh->type,
 					rb_node_dep->nhe->flags);
 			zebra_nhg_install_kernel(rb_node_dep->nhe,
-						 ZEBRA_ROUTE_MAX);
+						 CHECK_FLAG(rb_node_dep->nhe->flags,
+							    NEXTHOP_GROUP_INITIAL_DELAY_INSTALL)
+							 ? ZEBRA_ROUTE_CONNECT
+							 : ZEBRA_ROUTE_MAX);
 
 			/* Don't need to modify dependents if installed */
 			if (CHECK_FLAG(rb_node_dep->nhe->flags,
